@@ -1,9 +1,9 @@
 builddir = out\release
 cxx = cl
 ar = link
-cflags = /nologo /Zi /W4 /WX /wd4530 /wd4100 /wd4706 /wd4512 /wd4800 $
-    /wd4702 /wd4819 /wd4355 /GR- /wd4267 /DNOMINMAX $
-    /D_CRT_SECURE_NO_WARNINGS /FS /Ox /DNDEBUG /GL
+cflags = /nologo /Zi /W4 /WX /wd4530 /wd4800 /GR- $
+    /DNOMINMAX /D_CRT_SECURE_NO_WARNINGS /FS /Ox /DNDEBUG /GL $
+    /Fd$builddir\delve.pdb
 ldflags = /DEBUG /libpath:$builddir /LTCG /OPT:REF /OPT:ICF
 
 rule cxx
@@ -19,4 +19,4 @@ rule link
   command = $cxx $in $libs /nologo /link $ldflags /out:$out
   description = LINK $out
 
-include common.ninja
+include build\common.ninja

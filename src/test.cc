@@ -39,7 +39,7 @@ bool testing::Test::Check(bool condition, const char* file, int line,
   return condition;
 }
 
-int main(int argc, char **argv) {
+int main() {
   int tests_started = 0;
 
   bool passed = true;

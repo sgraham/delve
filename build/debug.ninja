@@ -1,9 +1,9 @@
 builddir = out\debug
 cxx = cl
 ar = link
-cflags = /nologo /Zi /W4 /WX /wd4530 /wd4100 /wd4706 /wd4512 /wd4800 $
-    /wd4702 /wd4819 /wd4355 /GR- /wd4267 /DNOMINMAX $
-    /D_CRT_SECURE_NO_WARNINGS /FS
+cflags = /nologo /Zi /W4 /WX /wd4530 /wd4800 /GR- $
+    /DNOMINMAX /D_CRT_SECURE_NO_WARNINGS /FS $
+    /Fd$builddir\delve.pdb
 ldflags = /DEBUG /libpath:$builddir
 
 rule cxx
@@ -12,11 +12,11 @@ rule cxx
   deps = msvc
 
 rule ar
-  command = lib /nologo /ltcg /out:$out $in
+  command = lib /nologo /out:$out $in
   description = LIB $out
 
 rule link
   command = $cxx $in $libs /nologo /link $ldflags /out:$out
   description = LINK $out
 
-include common.ninja
+include build\common.ninja
