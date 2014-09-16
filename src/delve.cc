@@ -2,8 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "line_printer.h"
+#include "full_window_output.h"
 #include "util.h"
+
+#include <conio.h>
 
 struct FileListDatabase {
   struct FileReader {
@@ -51,21 +53,29 @@ struct RealFileReader : public FileListDatabase::FileReader {
 };
 
 int main() {
-  LinePrinter line_printer;
+  FullWindowOutput output;
   RealFileReader file_reader;
   FileListDatabase database(&file_reader);
-  line_printer.Print("Loading database...", LinePrinter::ELIDE);
+  //output.Mode1("file names (Ctrl-N)");
+  //output.Mode2("substring (Ctrl-R)");
+  output.Status("Loading database...");
 
   string err;
   if (!database.Load("test.txt", &err)) {
     Fatal(err.c_str());
   }
 
+  // type to filter
+  // Ctrl-J/K to move in list
+  // Ctrl-N = toggle { search file names, search contents }
+  // Ctrl-R = toggle { plain substr, regex match }
   char buf[256];
-  sprintf(buf, "Loaded %d files.", database.FileCount());
-  line_printer.Print(buf, LinePrinter::ELIDE);
+  sprintf(buf,
+          "Loaded %d files.",
+          database.FileCount());
+  output.Status(buf);
 
-
+  _getch();
 
   return 0;
 }

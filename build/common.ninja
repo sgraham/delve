@@ -7,8 +7,12 @@ build $builddir\delve.lib: ar $
     
 
 build $builddir\delve.obj: cxx src\delve.cc
+build $builddir\full_window_output.obj: cxx src\full_window_output.cc
 build delve: phony $builddir\delve.exe
-build $builddir\delve.exe: link $builddir\delve.obj | $builddir\delve.lib
+build $builddir\delve.exe: link $
+    $builddir\delve.obj $
+    $builddir\full_window_output.obj $
+    | $builddir\delve.lib
   libs = delve.lib
 
 # Tests all build into delve_test executable.

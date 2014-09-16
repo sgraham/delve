@@ -1,0 +1,130 @@
+// Copyright 2014 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#include "full_window_output.h"
+
+#include "util.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#error
+#endif
+
+FullWindowOutput::FullWindowOutput()
+    : original_contents_(NULL), width_(-1), height_(-1) {
+#ifndef _WIN32
+  const char* term = getenv("TERM");
+  smart_terminal_ = isatty(1) && term && string(term) != "dumb";
+#else
+  console_ = GetStdHandle(STD_OUTPUT_HANDLE);
+  CONSOLE_SCREEN_BUFFER_INFO csbi;
+  smart_terminal_ = GetConsoleScreenBufferInfo(console_, &csbi);
+#endif
+
+  CaptureOriginalContentsAndClear();
+}
+
+FullWindowOutput::~FullWindowOutput() {
+  RestoreOriginalContents();
+  delete original_contents_;
+}
+
+void FullWindowOutput::Status(const string& status) {
+  string to_print;
+#ifdef _WIN32
+  CONSOLE_SCREEN_BUFFER_INFO csbi;
+  GetConsoleScreenBufferInfo(console_, &csbi);
+  string mode = "[file names : Ctrl-N] [substring : Ctrl-R] ";
+  // Don't use the full width or console will move to next line.
+  size_t width = static_cast<size_t>(csbi.dwSize.X - 1 - mode.size());
+  to_print = mode + ElideMiddle(status, width);
+  GetConsoleScreenBufferInfo(console_, &csbi);
+  COORD buf_size = {csbi.dwSize.X, 1};
+  COORD zero_zero = {0, 0};
+  SMALL_RECT target = {
+      0,                                         csbi.srWindow.Bottom - 1,
+      static_cast<SHORT>(0 + csbi.dwSize.X - 1), csbi.srWindow.Bottom - 1};
+  CHAR_INFO* char_data = new CHAR_INFO[csbi.dwSize.X];
+  memset(char_data, 0, sizeof(CHAR_INFO) * csbi.dwSize.X);
+  for (int i = 0; i < csbi.dwSize.X; ++i) {
+    char_data[i].Char.AsciiChar = ' ';
+    // Black on white.
+    char_data[i].Attributes =
+        BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED;
+  }
+  for (size_t i = 0; i < to_print.size(); ++i)
+    char_data[i].Char.AsciiChar = to_print[i];
+  WriteConsoleOutput(console_, char_data, buf_size, zero_zero, &target);
+  csbi.dwCursorPosition.X = 0;
+  csbi.dwCursorPosition.Y = csbi.srWindow.Bottom;
+  SetConsoleCursorPosition(console_, csbi.dwCursorPosition);
+  delete[] char_data;
+#else
+  // Limit output to width of the terminal if provided so we don't cause
+  // line-wrapping.
+  winsize size;
+  if ((ioctl(0, TIOCGWINSZ, &size) == 0) && size.ws_col) {
+    to_print = ElideMiddle(status, size.ws_col);
+  }
+  printf("%s", to_print.c_str());
+  printf("\x1B[K");  // Clear to end of line.
+  fflush(stdout);
+#endif
+}
+
+void FullWindowOutput::CaptureOriginalContentsAndClear() {
+  if (!smart_terminal_)
+    Fatal("not a smart terminal");
+
+#ifndef _WIN32
+#error
+#else
+  CONSOLE_SCREEN_BUFFER_INFO csbi;
+  GetConsoleScreenBufferInfo(console_, &csbi);
+  width_ = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+  height_ = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+  COORD zero_zero = {0, 0};
+  COORD window_size = {static_cast<SHORT>(width_), static_cast<SHORT>(height_)};
+  COORD window_left_top = {csbi.srWindow.Left, csbi.srWindow.Top};
+  original_contents_ = new CHAR_INFO[width_ * height_];
+  if (!ReadConsoleOutput(console_,
+                         original_contents_,
+                         window_size,
+                         zero_zero,
+                         &csbi.srWindow)) {
+    Fatal("couldn't save window contents, GetLastError: %d", GetLastError());
+  }
+
+  DWORD written;
+  if (!FillConsoleOutputCharacter(
+           console_, ' ', width_ * height_, window_left_top, &written)) {
+    Fatal("couldn't clear, GetLastError: %d", GetLastError());
+  }
+#endif
+}
+
+void FullWindowOutput::RestoreOriginalContents() {
+  if (!smart_terminal_)
+    Fatal("not a smart terminal");
+
+#ifndef _WIN32
+#error
+#else
+#endif
+
+  // TODO(scottmg): Resize during operation would crash; saving is weird too
+  // though.
+  CONSOLE_SCREEN_BUFFER_INFO csbi;
+  GetConsoleScreenBufferInfo(console_, &csbi);
+  COORD zero_zero = {0, 0};
+  COORD window_size = {static_cast<SHORT>(width_), static_cast<SHORT>(height_)};
+  if (!WriteConsoleOutput(console_,
+                          original_contents_,
+                          window_size,
+                          zero_zero,
+                          &csbi.srWindow)) {
+    Fatal("couldn't restore window contents, GetLastError: %d", GetLastError());
+  }
+}
