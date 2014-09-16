@@ -115,6 +115,14 @@ void FullWindowOutput::CaptureOriginalContentsAndClear() {
            console_, ' ', width_ * height_, window_left_top, &written)) {
     Fatal("couldn't clear, GetLastError: %d", GetLastError());
   }
+  if (!FillConsoleOutputAttribute(
+           console_,
+           FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,
+           width_ * height_,
+           window_left_top,
+           &written)) {
+    Fatal("couldn't clear, GetLastError: %d", GetLastError());
+  }
 #endif
 }
 
