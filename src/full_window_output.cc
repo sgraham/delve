@@ -79,7 +79,8 @@ void FullWindowOutput::FillLine(int y_offset,
 }
 
 void FullWindowOutput::Status(const string& status) {
-  FillLine(-2, "[file names : Ctrl-N] [substring : Ctrl-R] ", status, true);
+  FillLine(
+      -2, "" /*"[file names : Ctrl-N] [substring : Ctrl-R] "*/, status, true);
 }
 
 void FullWindowOutput::DisplayCurrentFilter(const string& filter) {
