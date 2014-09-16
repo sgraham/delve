@@ -52,6 +52,73 @@ struct RealFileReader : public FileListDatabase::FileReader {
   }
 };
 
+void BlockingInputLoop(void (*refresh_callback)(const string&, void*),
+                       void* user_data) {
+  HANDLE stdin_handle = ::GetStdHandle(STD_INPUT_HANDLE);
+  if (stdin_handle == INVALID_HANDLE_VALUE)
+    Fatal("GetStdHandle");
+  DWORD old_mode;
+  if (!::GetConsoleMode(stdin_handle, &old_mode))
+    Fatal("GetConsoleMode");
+
+  // Enable the window and mouse input events.
+
+  DWORD input_mode = ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
+  if (!::SetConsoleMode(stdin_handle, input_mode)) {
+    SetConsoleMode(stdin_handle, old_mode);
+    Fatal("SetConsoleMode");
+  }
+
+  string filter;
+
+  for (;;) {
+    DWORD num_read;
+    INPUT_RECORD input_record[128];
+    if (!ReadConsoleInput(stdin_handle,  // input buffer handle
+                          input_record,  // buffer to read into
+                          sizeof(input_record) /
+                              sizeof(*input_record),  // size of read buffer
+                          &num_read)) {               // number of records read
+      SetConsoleMode(stdin_handle, old_mode);
+      Fatal("ReadConsoleInput");
+    }
+    for (DWORD i = 0; i < num_read; i++) {
+      switch (input_record[i].EventType) {
+        case KEY_EVENT: {
+          const KEY_EVENT_RECORD& ker = input_record[i].Event.KeyEvent;
+          if (ker.wVirtualKeyCode == VK_ESCAPE) {
+            goto done;
+          } else if (ker.wVirtualKeyCode == VK_BACK && !filter.empty() &&
+                     ker.bKeyDown) {
+            filter = filter.substr(0, filter.size() - 1);
+          } else if (isprint(ker.uChar.AsciiChar) && ker.bKeyDown) {
+            filter += ker.uChar.AsciiChar;
+          } else {
+            //printf("%d\n", ker.wVirtualKeyCode);
+          }
+        } break;
+
+        case MOUSE_EVENT:
+        case WINDOW_BUFFER_SIZE_EVENT:
+        case FOCUS_EVENT:
+        case MENU_EVENT:
+          // Ignore all of these.
+          break;
+      }
+
+      refresh_callback(filter, user_data);
+    }
+  }
+
+done:
+  SetConsoleMode(stdin_handle, old_mode);
+}
+
+void Refresh(const string& filter, void* user_data) {
+  FullWindowOutput* output = reinterpret_cast<FullWindowOutput*>(user_data);
+  output->DisplayCurrentFilter(filter);
+}
+
 int main() {
   FullWindowOutput output;
   RealFileReader file_reader;
@@ -75,7 +142,7 @@ int main() {
           database.FileCount());
   output.Status(buf);
 
-  _getch();
+  BlockingInputLoop(&Refresh, reinterpret_cast<void*>(&output));
 
   return 0;
 }

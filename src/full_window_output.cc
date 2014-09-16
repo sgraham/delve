@@ -31,34 +31,38 @@ FullWindowOutput::~FullWindowOutput() {
   delete original_contents_;
 }
 
-void FullWindowOutput::Status(const string& status) {
+void FullWindowOutput::FillLine(int y_offset,
+                                const string& prefix,
+                                const string& rest,
+                                bool reverse_video) {
   string to_print;
 #ifdef _WIN32
   CONSOLE_SCREEN_BUFFER_INFO csbi;
   GetConsoleScreenBufferInfo(console_, &csbi);
-  string mode = "[file names : Ctrl-N] [substring : Ctrl-R] ";
   // Don't use the full width or console will move to next line.
-  size_t width = static_cast<size_t>(csbi.dwSize.X - 1 - mode.size());
-  to_print = mode + ElideMiddle(status, width);
+  size_t width = static_cast<size_t>(csbi.dwSize.X - 1 - prefix.size());
+  to_print = prefix + ElideMiddle(rest, width);
   GetConsoleScreenBufferInfo(console_, &csbi);
   COORD buf_size = {csbi.dwSize.X, 1};
   COORD zero_zero = {0, 0};
-  SMALL_RECT target = {
-      0,                                         csbi.srWindow.Bottom - 1,
-      static_cast<SHORT>(0 + csbi.dwSize.X - 1), csbi.srWindow.Bottom - 1};
+  SHORT y_coord = static_cast<SHORT>(
+      y_offset >= 0 ? y_offset : csbi.srWindow.Bottom + y_offset + 1);
+  SMALL_RECT target = {0,                                         y_coord,
+                       static_cast<SHORT>(0 + csbi.dwSize.X - 1), y_coord};
   CHAR_INFO* char_data = new CHAR_INFO[csbi.dwSize.X];
   memset(char_data, 0, sizeof(CHAR_INFO) * csbi.dwSize.X);
   for (int i = 0; i < csbi.dwSize.X; ++i) {
     char_data[i].Char.AsciiChar = ' ';
     // Black on white.
     char_data[i].Attributes =
-        BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED;
+        reverse_video ? (BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE)
+                      : (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
   }
   for (size_t i = 0; i < to_print.size(); ++i)
     char_data[i].Char.AsciiChar = to_print[i];
   WriteConsoleOutput(console_, char_data, buf_size, zero_zero, &target);
-  csbi.dwCursorPosition.X = 0;
-  csbi.dwCursorPosition.Y = csbi.srWindow.Bottom;
+  csbi.dwCursorPosition.X = static_cast<SHORT>(to_print.size());
+  csbi.dwCursorPosition.Y = y_coord;
   SetConsoleCursorPosition(console_, csbi.dwCursorPosition);
   delete[] char_data;
 #else
@@ -72,6 +76,14 @@ void FullWindowOutput::Status(const string& status) {
   printf("\x1B[K");  // Clear to end of line.
   fflush(stdout);
 #endif
+}
+
+void FullWindowOutput::Status(const string& status) {
+  FillLine(-2, "[file names : Ctrl-N] [substring : Ctrl-R] ", status, true);
+}
+
+void FullWindowOutput::DisplayCurrentFilter(const string& filter) {
+  FillLine(-1, "", filter, false);
 }
 
 void FullWindowOutput::CaptureOriginalContentsAndClear() {

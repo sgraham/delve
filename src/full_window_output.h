@@ -12,10 +12,19 @@ struct FullWindowOutput {
   ~FullWindowOutput();
 
   void Status(const string& status);
+  void DisplayCurrentFilter(const string& status);
 
  private:
   void CaptureOriginalContentsAndClear();
   void RestoreOriginalContents();
+
+  // y_offset >= 0 from top, < 0 from bottom
+  // |prefix| never truncated, |rest| elided in middle
+  // if |reverse_video|, black on white instead of white on black.
+  void FillLine(int y_offset,
+                const string& prefix,
+                const string& rest,
+                bool reverse_video);
 
 #ifdef _WIN32
   void* console_;
