@@ -7,7 +7,7 @@
 #include "test.h"
 
 TEST(MemoryMappedFileTest, Simple) {
-  MemoryMappedFile test("src/mmap_test");
+  MemoryMappedFile test("src/mmap_test_data");
   EXPECT_EQ(9, test.Size());
   EXPECT_EQ('a', test.Data()[0]);
   EXPECT_EQ('b', test.Data()[1]);
