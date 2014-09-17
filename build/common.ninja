@@ -1,7 +1,9 @@
 # Core source files all build into library.
+build $builddir\index.obj: cxx src\index.cc
 build $builddir\memory_mapped_file.obj: cxx src\memory_mapped_file.cc
 build $builddir\util.obj: cxx src\util.cc
 build $builddir\delve.lib: ar $
+    $builddir\index.obj $
     $builddir\memory_mapped_file.obj $
     $builddir\util.obj $
     
@@ -16,12 +18,14 @@ build $builddir\delve.exe: link $
   libs = delve.lib
 
 # Tests all build into delve_test executable.
+build $builddir\index_test.obj: cxx src\index_test.cc
 build $builddir\line_printer.obj: cxx src\line_printer.cc
 build $builddir\memory_mapped_file_test.obj: cxx src\memory_mapped_file_test.cc
 build $builddir\util_test.obj: cxx src\util_test.cc
 build $builddir\test.obj: cxx src\test.cc
 build delve_test: phony $builddir\delve_test.exe
 build $builddir\delve_test.exe: link $
+    $builddir\index_test.obj $
     $builddir\line_printer.obj $
     $builddir\memory_mapped_file_test.obj $
     $builddir\test.obj $

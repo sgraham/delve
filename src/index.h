@@ -27,6 +27,20 @@ using namespace std;
 // "\ndelve file end\n"
 //
 // All indices are little endian.
+//
+// Incremental updates:
+// - Keep N-1 shards on disk, and Nth update one in memory in plain memory
+// storage suitable for updates.
+// - Removal/renames can be semi-ignored as the index will name a file that's
+// gone. If it hits a the trigram query, the final grep can simply fail
+// quietly.
+// - File additions build index in memory. Again, conservative is OK. We need
+// to add the trigrams for the new file right away, but we don't need to worry
+// about fully superceeding previous versions.
+// - When the in-memory exceeds some threshold, it's written to disk and then
+// merged wth the other shards. The merge should tidy up the deletions, and
+// needs to be careful to make sure the newest version from the in-memory
+// version is the version that's kept. Timestamps?
 
 struct Index {
   explicit Index(const string& filename);
