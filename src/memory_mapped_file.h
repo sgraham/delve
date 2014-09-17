@@ -5,25 +5,19 @@
 #ifndef DELVE_MEMORY_MAPPED_FILE_H
 #define DELVE_MEMORY_MAPPED_FILE_H
 
-#include <assert.h>
 #include <string>
 #include <windows.h>
 using namespace std;
 
 class MemoryMappedFile {
 public:
-  MemoryMappedFile(const string& filename,
-                   size_t initial_size = 1000000,
-                   double grow_factor = 1.5);
+  MemoryMappedFile(const string& filename);
   ~MemoryMappedFile();
 
-  // Must be called before use. Returns true if the file was newly created and
-  // so the caller should do first time setup.
-  bool Initialize();
-
-  void IncreaseFileSize();
-  size_t Size() const { assert(file_ != INVALID_HANDLE_VALUE); return size_; }
-  void* View() const { assert(file_ != INVALID_HANDLE_VALUE); return view_; }
+  size_t Size() const { return size_; }
+  const unsigned char* Data() const {
+    return reinterpret_cast<const unsigned char*>(view_);
+  }
 
 private:
   void MapFile();
@@ -31,11 +25,8 @@ private:
 
   HANDLE file_;
   HANDLE file_mapping_;
-  string filename_;
   void* view_;
   size_t size_;
-  size_t initial_size_;
-  double grow_factor_;
 };
 
 #endif  // DELVE_MEMORY_MAPPED_FILE_H

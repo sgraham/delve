@@ -6,32 +6,16 @@
 
 #include "test.h"
 
-TEST(MemoryMappedFileTest, Empty) {
-  ScopedTempDir temp;
-  temp.CreateAndEnter("Empty");
-
-  {
-    MemoryMappedFile stuff("stuff", 10, 2);
-    EXPECT_EQ(true, stuff.Initialize());
-    EXPECT_EQ(10, stuff.Size());
-  }
-
-  temp.Cleanup();
-}
-
-TEST(MemoryMappedFileTest, Grow) {
-  ScopedTempDir temp;
-  temp.CreateAndEnter("Grow");
-
-  {
-    MemoryMappedFile stuff("stuff", 10, 2);
-    EXPECT_EQ(true, stuff.Initialize());
-    memcpy(stuff.View(), "HEADER", 6);
-    stuff.IncreaseFileSize();
-    stuff.IncreaseFileSize();
-    EXPECT_EQ(40, stuff.Size());
-    EXPECT_EQ(0, memcmp(stuff.View(), "HEADER", 6));
-  }
-
-  temp.Cleanup();
+TEST(MemoryMappedFileTest, Simple) {
+  MemoryMappedFile test("src/mmap_test");
+  EXPECT_EQ(9, test.Size());
+  EXPECT_EQ('a', test.Data()[0]);
+  EXPECT_EQ('b', test.Data()[1]);
+  EXPECT_EQ('c', test.Data()[2]);
+  EXPECT_EQ(0, test.Data()[3]);
+  EXPECT_EQ('d', test.Data()[4]);
+  EXPECT_EQ('e', test.Data()[5]);
+  EXPECT_EQ('f', test.Data()[6]);
+  EXPECT_EQ(0, test.Data()[7]);
+  EXPECT_EQ('\n', test.Data()[8]);
 }

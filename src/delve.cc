@@ -7,9 +7,6 @@
 
 #include <conio.h>
 
-// Loading DB like this takes too long, even on very fast computer and SSD.
-// Some sort of record mmap'd thing.
-
 struct FileListDatabase {
   struct FileReader {
     virtual ~FileReader() {}
