@@ -1,0 +1,3 @@
+"C:\Program Files (x86)\Microsoft Visual Studio 12.0\vc\vcvarsall" amd64
+bin\win\ninja -f build\release.ninja && out\release\delve_test
+copy out\release\delve.exe %SOMEWHERE_IN_PATH%

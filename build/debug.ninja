@@ -3,7 +3,7 @@ cxx = cl
 ar = link
 cflags = /nologo /Zi /W4 /WX /wd4530 /wd4800 /GR- $
     /DNOMINMAX /D_CRT_SECURE_NO_WARNINGS /FS $
-    /Fd$builddir\delve.pdb
+    /Fd$builddir\delveobjs.pdb
 ldflags = /DEBUG /libpath:$builddir
 
 rule cxx

@@ -107,13 +107,13 @@ void FullWindowOutput::CaptureOriginalContentsAndClear() {
                          window_size,
                          zero_zero,
                          &csbi.srWindow)) {
-    Fatal("couldn't save window contents, GetLastError: %d", GetLastError());
+    Win32Fatal("ReadConsoleOutput");
   }
 
   DWORD written;
   if (!FillConsoleOutputCharacter(
            console_, ' ', width_ * height_, window_left_top, &written)) {
-    Fatal("couldn't clear, GetLastError: %d", GetLastError());
+    Win32Fatal("FillConsoleOutputCharacter");
   }
   if (!FillConsoleOutputAttribute(
            console_,
@@ -121,7 +121,7 @@ void FullWindowOutput::CaptureOriginalContentsAndClear() {
            width_ * height_,
            window_left_top,
            &written)) {
-    Fatal("couldn't clear, GetLastError: %d", GetLastError());
+    Win32Fatal("FillConsoleOutputAttribute");
   }
 #endif
 }
@@ -146,6 +146,6 @@ void FullWindowOutput::RestoreOriginalContents() {
                           window_size,
                           zero_zero,
                           &csbi.srWindow)) {
-    Fatal("couldn't restore window contents, GetLastError: %d", GetLastError());
+    Win32Fatal("WriteConsoleOutput");
   }
 }

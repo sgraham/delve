@@ -2,6 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#ifndef DELVE_TEST_H_
+#define DELVE_TEST_H_
+
+#include "util.h"
+
 namespace testing {
 class Test {
   bool failed_;
@@ -83,3 +88,18 @@ extern testing::Test* g_current_test;
     }                                               \
   }
 
+
+struct ScopedTempDir {
+  /// Create a temporary directory and chdir into it.
+  void CreateAndEnter(const string& name);
+
+  /// Clean up the temporary directory.
+  void Cleanup();
+
+  /// The temp directory containing our dir.
+  string start_dir_;
+  /// The subdirectory name for our dir, or empty if it hasn't been set up.
+  string temp_dir_name_;
+};
+
+#endif  // DELVE_TEST_H_

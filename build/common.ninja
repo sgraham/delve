@@ -1,11 +1,11 @@
 # Core source files all build into library.
-build $builddir\line_printer.obj: cxx src\line_printer.cc
+build $builddir\memory_mapped_file.obj: cxx src\memory_mapped_file.cc
 build $builddir\util.obj: cxx src\util.cc
 build $builddir\delve.lib: ar $
-    $builddir\line_printer.obj $
+    $builddir\memory_mapped_file.obj $
     $builddir\util.obj $
     
-
+# Main binary.
 build $builddir\delve.obj: cxx src\delve.cc
 build $builddir\full_window_output.obj: cxx src\full_window_output.cc
 build delve: phony $builddir\delve.exe
@@ -16,10 +16,14 @@ build $builddir\delve.exe: link $
   libs = delve.lib
 
 # Tests all build into delve_test executable.
+build $builddir\line_printer.obj: cxx src\line_printer.cc
+build $builddir\memory_mapped_file_test.obj: cxx src\memory_mapped_file_test.cc
 build $builddir\util_test.obj: cxx src\util_test.cc
 build $builddir\test.obj: cxx src\test.cc
 build delve_test: phony $builddir\delve_test.exe
 build $builddir\delve_test.exe: link $
+    $builddir\line_printer.obj $
+    $builddir\memory_mapped_file_test.obj $
     $builddir\test.obj $
     $builddir\util_test.obj $
     | $builddir\delve.lib
