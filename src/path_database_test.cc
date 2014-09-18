@@ -4,6 +4,8 @@
 
 #include "path_database.h"
 
+#include <direct.h>
+
 #include "file_extra_util.h"
 #include "test.h"
 
@@ -106,20 +108,19 @@ DWORDLONG GetFrnOfPath(const wstring& path) {
 }  // namespace
 
 TEST(PathDatabaseTest, PopulateViaMftFull) {
-  /*
   ScopedTempDir temp;
   temp.CreateAndEnter("populate-via-mft");
 
   wstring parent_dir = L"parent";
-  file_util::CreateDirectory(FilePath(parent_dir));
+  _wmkdir(parent_dir.c_str());
   DWORDLONG parent_dir_frn = GetFrnOfPath(parent_dir);
 
   PathDatabase before;
   before.PopulateFromMft(GetCurrentVolume());
 
   wstring child_dir = L"child";
-  file_util::SetCurrentDirectory(FilePath(parent_dir));
-  file_util::CreateDirectory(FilePath(child_dir));
+  _wchdir(parent_dir.c_str());
+  _wmkdir(child_dir.c_str());
 
   DWORDLONG dir_frn = GetFrnOfPath(child_dir);
 
@@ -135,19 +136,16 @@ TEST(PathDatabaseTest, PopulateViaMftFull) {
   EXPECT_EQ(parent_dir_frn, path_entry.parent_frn);
 
   temp.Cleanup();
-  */
 }
 
 TEST(PathDatabaseTest, PopulateViaMftIncremental) {
-  /*
   ScopedTempDir temp;
   temp.CreateAndEnter("populate-incremental");
 
   PathDatabase before;
   before.PopulateFromMft(GetCurrentVolume());
 
-  FilePath subdir(FILE_PATH_LITERAL("subdir"));
-  file_util::CreateDirectory(subdir);
+  _mkdir("subdir");
 
   PathDatabase after;
   after.PopulateFromMft(GetCurrentVolume(), before.LastUsn());
@@ -157,5 +155,4 @@ TEST(PathDatabaseTest, PopulateViaMftIncremental) {
   EXPECT_EQ(2, after.NumEntries());
 
   temp.Cleanup();
-  */
 }
