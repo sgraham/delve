@@ -32,7 +32,7 @@ struct ChangeJournalTest : public testing::Test {
 
 TEST_F(ChangeJournalTest, Basic) {
   PathDatabase db;
-  db.PopulateFromMft(::GetCurrentVolume());
+  db.PopulateFromMftFull(::GetCurrentVolume());
 
   ChangeJournal cj(::GetCurrentVolume(), db);
   cj.SetChangeNotificationDelegate(&notifier);

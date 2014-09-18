@@ -30,18 +30,21 @@ void QueryUsnJournal(HANDLE volume, USN_JOURNAL_DATA* usn) {
 PathDatabase::PathDatabase() : last_usn_(0), usn_journal_id_(0) {
 }
 
+void PathDatabase::PopulateFromMftFull(wchar_t drive_letter) {
+  PopulateFromMftFromInitialPoint(drive_letter, 0);
+}
+
 // Hmm, this is actually faster than I thought. It's ~800ms on a not too big
 // SSD, a couple seconds on medium sized laptop hard drive. If there's going
 // to be a daemon anyway, then persisting it might be unnecessary. It's about
 // 8 sec on a 1TB spinning disk when the cache is hot.
-void PathDatabase::PopulateFromMft(
-    wchar_t drive_letter, DWORDLONG usn_from, DWORDLONG usn_to) {
+void PathDatabase::PopulateFromMftFromInitialPoint(wchar_t drive_letter,
+                                                   DWORDLONG usn_from) {
   HANDLE volume = OpenVolume(drive_letter, false);
 
   USN_JOURNAL_DATA ujd;
   QueryUsnJournal(volume, &ujd);
-  if (usn_to == ULLONG_MAX)
-    usn_to = ujd.NextUsn;
+  DWORDLONG usn_to = ujd.NextUsn;
   usn_journal_id_ = ujd.UsnJournalID;
 
   data_.clear();

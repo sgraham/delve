@@ -116,7 +116,7 @@ TEST(PathDatabaseTest, PopulateViaMftFull) {
   DWORDLONG parent_dir_frn = GetFrnOfPath(parent_dir);
 
   PathDatabase before;
-  before.PopulateFromMft(GetCurrentVolume());
+  before.PopulateFromMftFull(GetCurrentVolume());
 
   wstring child_dir = L"child";
   _wchdir(parent_dir.c_str());
@@ -125,7 +125,7 @@ TEST(PathDatabaseTest, PopulateViaMftFull) {
   DWORDLONG dir_frn = GetFrnOfPath(child_dir);
 
   PathDatabase after;
-  after.PopulateFromMft(GetCurrentVolume());
+  after.PopulateFromMftFull(GetCurrentVolume());
 
   PathDbEntry path_entry;
 
@@ -143,12 +143,12 @@ TEST(PathDatabaseTest, PopulateViaMftIncremental) {
   temp.CreateAndEnter("populate-incremental");
 
   PathDatabase before;
-  before.PopulateFromMft(GetCurrentVolume());
+  before.PopulateFromMftFull(GetCurrentVolume());
 
   _mkdir("subdir");
 
   PathDatabase after;
-  after.PopulateFromMft(GetCurrentVolume(), before.LastUsn());
+  after.PopulateFromMftFromInitialPoint(GetCurrentVolume(), before.LastUsn());
 
   // One for root which is always there, plus the one we made.
   // TODO: This is flaky if the machine is busy and creates a directory.
