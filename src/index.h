@@ -51,6 +51,16 @@ using namespace std;
 // - The merge should tidy up the deletions, and needs to be careful to make
 // sure the newest version from the in-memory version is the version that's
 // kept. Timestamps?
+//
+//
+// Hmm, but assuming there's no daemon, we're doing the update as the program
+// starts by reading the Last USN -> current. The only upside to a
+// disk/in-memory split then is that it might be slightly faster to update the
+// index if there's no need to flush/merge. But that seems like it should be
+// relatively small.
+//
+// So, need a format that supports efficient merging, with the ability to
+// remove entries (or at least invalidate entries).
 
 struct Index {
   explicit Index(const string& filename);
