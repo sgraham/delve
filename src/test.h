@@ -100,6 +100,8 @@ struct ScopedTempDir {
   string start_dir_;
   /// The subdirectory name for our dir, or empty if it hasn't been set up.
   string temp_dir_name_;
+  /// Original directory.
+  string original_dir_;
 };
 
 #endif  // DELVE_TEST_H_

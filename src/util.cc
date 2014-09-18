@@ -38,7 +38,7 @@
 
 void Fatal(const char* msg, ...) {
   va_list ap;
-  fprintf(stderr, "delve: fatal: ");
+  fprintf(stderr, "\ndelve: fatal: ");
   va_start(ap, msg);
   vfprintf(stderr, msg, ap);
   va_end(ap);
@@ -56,7 +56,7 @@ void Fatal(const char* msg, ...) {
 
 void Warning(const char* msg, ...) {
   va_list ap;
-  fprintf(stderr, "delve: warning: ");
+  fprintf(stderr, "\ndelve: warning: ");
   va_start(ap, msg);
   vfprintf(stderr, msg, ap);
   va_end(ap);
@@ -65,7 +65,7 @@ void Warning(const char* msg, ...) {
 
 void Error(const char* msg, ...) {
   va_list ap;
-  fprintf(stderr, "delve: error: ");
+  fprintf(stderr, "\ndelve: error: ");
   va_start(ap, msg);
   vfprintf(stderr, msg, ap);
   va_end(ap);

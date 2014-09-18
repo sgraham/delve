@@ -21,7 +21,7 @@ public:
 
 class ChangeJournal {
 public:
-  ChangeJournal(char drive_letter, PathDatabase& path_database);
+  ChangeJournal(wchar_t drive_letter, PathDatabase& path_database);
   ~ChangeJournal();
 
   void SetChangeNotificationDelegate(
@@ -44,7 +44,7 @@ private:
   // In either case, we'll try to read more data, and then attempt again.
   bool SetUpNotification();
 
-  char drive_letter_;
+  wchar_t drive_letter_;
   PathDatabase& path_database_;
 
   // Where we should send information about changes.

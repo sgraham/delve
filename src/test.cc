@@ -65,6 +65,12 @@ string GetSystemTempDir() {
 #endif
 }
 
+string GetCurDir() {
+  char buf[_MAX_PATH];
+  _getcwd(buf, sizeof(buf));
+  return buf;
+}
+
 }  // anonymous namespace
 
 void RegisterTest(testing::Test* (*factory)()) {
@@ -94,6 +100,8 @@ bool testing::Test::Check(bool condition, const char* file, int line,
 }
 
 void ScopedTempDir::CreateAndEnter(const string& name) {
+  original_dir_ = GetCurDir();
+
   // First change into the system temp dir and save it for cleanup.
   start_dir_ = GetSystemTempDir();
   if (start_dir_.empty())
@@ -132,6 +140,9 @@ void ScopedTempDir::Cleanup() {
     Fatal("system: %s", strerror(errno));
 
   temp_dir_name_.clear();
+
+  if (chdir(original_dir_.c_str()) < 0)
+    Fatal("chdir: %s", strerror(errno));
 }
 
 int main() {

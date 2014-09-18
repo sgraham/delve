@@ -28,19 +28,29 @@ using namespace std;
 //
 // All indices are little endian.
 //
+//
 // Incremental updates:
+//
 // - Keep N-1 shards on disk, and Nth update one in memory in plain memory
 // storage suitable for updates.
-// - Removal/renames can be semi-ignored as the index will name a file that's
-// gone. If it hits a the trigram query, the final grep can simply fail
-// quietly.
+//
+// - Various USN ops are mapped down to two things: Add and Remove.
+//
+// - Removal can be semi-ignored as the index will name a file that's gone. If
+// it hits a the trigram query, the final grep can simply fail quietly. These
+// should be stored in memory so the flush/merge can drop them.
+//
 // - File additions build index in memory. Again, conservative is OK. We need
 // to add the trigrams for the new file right away, but we don't need to worry
-// about fully superceeding previous versions.
+// about fully superceeding previous versions as we'll just get a slightly
+// larger set of documents to search in.
+//
 // - When the in-memory exceeds some threshold, it's written to disk and then
-// merged wth the other shards. The merge should tidy up the deletions, and
-// needs to be careful to make sure the newest version from the in-memory
-// version is the version that's kept. Timestamps?
+// merged wth the other shards.
+//
+// - The merge should tidy up the deletions, and needs to be careful to make
+// sure the newest version from the in-memory version is the version that's
+// kept. Timestamps?
 
 struct Index {
   explicit Index(const string& filename);

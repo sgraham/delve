@@ -26,7 +26,7 @@ public:
 
   // Files all directories on the volume specified by |drive_letter| by
   // reading the MFT. Optionally, restricted to range base on USN.
-  void PopulateFromMft(char drive_letter,
+  void PopulateFromMft(wchar_t drive_letter,
                        DWORDLONG usn_from = 0,
                        DWORDLONG usn_to = ULLONG_MAX);
 

@@ -61,7 +61,7 @@ string GetReasonString(DWORD reason) {
 
 }  // namespace
 
-ChangeJournal::ChangeJournal(char drive_letter, PathDatabase& path_database) :
+ChangeJournal::ChangeJournal(wchar_t drive_letter, PathDatabase& path_database) :
     drive_letter_(drive_letter),
     path_database_(path_database),
     change_delegate_(NULL) {

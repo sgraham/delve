@@ -35,7 +35,7 @@ PathDatabase::PathDatabase() : last_usn_(0), usn_journal_id_(0) {
 // to be a daemon anyway, then persisting it might be unnecessary. It's about
 // 8 sec on a 1TB spinning disk when the cache is hot.
 void PathDatabase::PopulateFromMft(
-    char drive_letter, DWORDLONG usn_from, DWORDLONG usn_to) {
+    wchar_t drive_letter, DWORDLONG usn_from, DWORDLONG usn_to) {
   HANDLE volume = OpenVolume(drive_letter, false);
 
   USN_JOURNAL_DATA ujd;

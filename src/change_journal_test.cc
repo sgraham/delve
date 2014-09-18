@@ -1,4 +1,4 @@
-// Copyright 2013 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -31,11 +31,10 @@ struct ChangeJournalTest : public testing::Test {
 }  // namespace
 
 TEST_F(ChangeJournalTest, Basic) {
-  /*
   PathDatabase db;
-  db.PopulateFromMft(GetCurrentVolume());
+  db.PopulateFromMft(::GetCurrentVolume());
 
-  ChangeJournal cj(GetCurrentVolume(), db);
+  ChangeJournal cj(::GetCurrentVolume(), db);
   cj.SetChangeNotificationDelegate(&notifier);
 
   ScopedTempDir temp;
@@ -55,5 +54,4 @@ TEST_F(ChangeJournalTest, Basic) {
   EXPECT_EQ(true, found_dir_in_changes);
 
   temp.Cleanup();
-  */
 }
