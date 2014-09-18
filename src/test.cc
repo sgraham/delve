@@ -136,8 +136,8 @@ void ScopedTempDir::Cleanup() {
 
 int main() {
   int tests_started = 0;
+  int tests_failed = 0;
 
-  bool passed = true;
   for (int i = 0; i < ntests; i++) {
     ++tests_started;
 
@@ -151,10 +151,13 @@ int main() {
     test->Run();
     test->TearDown();
     if (test->Failed())
-      passed = false;
+      ++tests_failed;
     delete test;
   }
 
-  printer.PrintOnNewLine(passed ? "passed\n" : "failed\n");
-  return passed ? EXIT_SUCCESS : EXIT_FAILURE;
+  printer.Print(tests_failed == 0
+                    ? StringPrintf("all %d tests ok", ntests)
+                    : StringPrintf("%d/%d tests failed", tests_failed, ntests),
+                LinePrinter::ELIDE);
+  return tests_failed == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
 }

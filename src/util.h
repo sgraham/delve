@@ -82,4 +82,8 @@ string GetLastErrorString();
 NORETURN void Win32Fatal(const char* function);
 #endif
 
+#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
+  TypeName(const TypeName&);               \
+  void operator=(const TypeName&)
+
 #endif  // DELVE_UTIL_H_

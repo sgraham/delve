@@ -1,10 +1,16 @@
 # Core source files all build into library.
+build $builddir\change_journal.obj: cxx src\change_journal.cc
+build $builddir\file_extra_util.obj: cxx src\file_extra_util.cc
 build $builddir\index.obj: cxx src\index.cc
 build $builddir\memory_mapped_file.obj: cxx src\memory_mapped_file.cc
+build $builddir\path_database.obj: cxx src\path_database.cc
 build $builddir\util.obj: cxx src\util.cc
 build $builddir\delve.lib: ar $
+    $builddir\change_journal.obj $
+    $builddir\file_extra_util.obj $
     $builddir\index.obj $
     $builddir\memory_mapped_file.obj $
+    $builddir\path_database.obj $
     $builddir\util.obj $
     
 # Main binary.
@@ -18,16 +24,20 @@ build $builddir\delve.exe: link $
   libs = delve.lib
 
 # Tests all build into delve_test executable.
+build $builddir\change_journal_test.obj: cxx src\change_journal_test.cc
 build $builddir\index_test.obj: cxx src\index_test.cc
 build $builddir\line_printer.obj: cxx src\line_printer.cc
 build $builddir\memory_mapped_file_test.obj: cxx src\memory_mapped_file_test.cc
+build $builddir\path_database_test.obj: cxx src\path_database_test.cc
 build $builddir\util_test.obj: cxx src\util_test.cc
 build $builddir\test.obj: cxx src\test.cc
 build delve_test: phony $builddir\delve_test.exe
 build $builddir\delve_test.exe: link $
+    $builddir\change_journal_test.obj $
     $builddir\index_test.obj $
     $builddir\line_printer.obj $
     $builddir\memory_mapped_file_test.obj $
+    $builddir\path_database_test.obj $
     $builddir\test.obj $
     $builddir\util_test.obj $
     | $builddir\delve.lib
