@@ -4,6 +4,7 @@
 
 #include "full_window_output.h"
 #include "util.h"
+#include "re2/re2.h"
 
 #include <conio.h>
 
@@ -18,11 +19,13 @@ struct FileListDatabase {
 
   bool Load(const string& filename, string* err);
 
-  size_t FileCount() const { return files_.size(); }
+  const vector<string>& Files() const { return files_; }
 
  private:
   FileReader* file_reader_;
   vector<string> files_;
+
+  DISALLOW_COPY_AND_ASSIGN(FileListDatabase);
 };
 
 bool FileListDatabase::Load(const string& filename, string* err) {
@@ -39,7 +42,8 @@ bool FileListDatabase::Load(const string& filename, string* err) {
     if (*i == '\n') {
       files_.push_back(cur);
       cur.clear();
-    }
+    } else
+      cur += *i;
   }
   if (!cur.empty())
     Fatal("expecting \n terminated db");
@@ -47,9 +51,18 @@ bool FileListDatabase::Load(const string& filename, string* err) {
 }
 
 struct RealFileReader : public FileListDatabase::FileReader {
+  RealFileReader() {}
   virtual bool ReadFile(const string &path, string *content, string *err) {
     return ::ReadFile(path, content, err) == 0;
   }
+
+  DISALLOW_COPY_AND_ASSIGN(RealFileReader);
+};
+
+struct SearchResult {
+  string filename;
+  int line;
+  string contents;
 };
 
 void BlockingInputLoop(void (*refresh_callback)(const string&, void*),
@@ -62,7 +75,6 @@ void BlockingInputLoop(void (*refresh_callback)(const string&, void*),
     Fatal("GetConsoleMode");
 
   // Enable the window and mouse input events.
-
   DWORD input_mode = ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT;
   if (!::SetConsoleMode(stdin_handle, input_mode)) {
     SetConsoleMode(stdin_handle, old_mode);
@@ -82,7 +94,7 @@ void BlockingInputLoop(void (*refresh_callback)(const string&, void*),
       SetConsoleMode(stdin_handle, old_mode);
       Fatal("ReadConsoleInput");
     }
-    for (DWORD i = 0; i < num_read; i++) {
+    for (unsigned int i = 0; i < num_read; i++) {
       switch (input_record[i].EventType) {
         case KEY_EVENT: {
           const KEY_EVENT_RECORD& ker = input_record[i].Event.KeyEvent;
@@ -114,33 +126,89 @@ done:
   SetConsoleMode(stdin_handle, old_mode);
 }
 
-void Refresh(const string& filter, void* user_data) {
-  FullWindowOutput* output = reinterpret_cast<FullWindowOutput*>(user_data);
-  output->DisplayCurrentFilter(filter);
+void RefreshThunk(const string& filter, void* user_data);
+
+class Entry {
+ public:
+  Entry() : database_(&file_reader_) {}
+
+  void Run() {
+    output_.Status("Loading database...");
+    string err;
+    if (!database_.Load("test.txt", &err))
+      Fatal(err.c_str());
+    char buf[256];  // TODO
+    sprintf(buf, "Loaded %d files.", database_.Files().size());
+    output_.Status(buf);
+
+    BlockingInputLoop(&RefreshThunk, reinterpret_cast<void*>(this));
+  }
+
+  void Refresh(const string& filter) {
+    output_.DisplayCurrentFilter(filter);
+    vector<SearchResult> results =
+        BruteForceFiles(filter, output_.VisibleOutputLines());
+    vector<string> present;
+    for (const auto& result : results) {
+      char buf[1024];  // TODO
+      sprintf(buf,
+              "%s:%d:%s",
+              result.filename.c_str(),
+              result.line,
+              result.contents.c_str());
+      present.push_back(buf);
+    }
+    output_.DisplayResults(present);
+  }
+
+ private:
+  vector<SearchResult> BruteForceFiles(const string& filter, int limit) {
+    vector<SearchResult> ret;
+    RE2 pattern(filter);
+    for (const auto& file : database_.Files()) {
+      int line = 1;
+      string contents;
+      string err;
+      if (!file_reader_.ReadFile(file, &contents, &err))
+        Fatal(err.c_str());
+      SearchResult result;
+      string::const_iterator p = contents.begin();
+      string::const_iterator end = contents.begin();
+      for (;;) {
+        string::const_iterator nl = find(p, end, '\n');
+        re2::StringPiece piece(&*p, static_cast<int>(nl - p));
+        if (RE2::PartialMatch(piece, pattern)) {
+          SearchResult result;
+          result.filename = file;
+          result.line = line;
+          result.contents = piece.ToString();
+          ret.push_back(result);
+          if (static_cast<int>(ret.size()) >= limit)
+            return ret;
+        }
+        if (nl == end)
+          break;
+        ++line;
+        p = nl + 1;
+      }
+    }
+    return ret;
+  }
+
+  FullWindowOutput output_;
+  RealFileReader file_reader_;
+  FileListDatabase database_;
+
+  DISALLOW_COPY_AND_ASSIGN(Entry);
+};
+
+void RefreshThunk(const string& filter, void* user_data) {
+  Entry* entry = reinterpret_cast<Entry*>(user_data);
+  entry->Refresh(filter);
 }
 
 int main() {
-  FullWindowOutput output;
-  RealFileReader file_reader;
-  FileListDatabase database(&file_reader);
-  output.Status("Loading database...");
-
-  string err;
-  if (!database.Load("test.txt", &err)) {
-    Fatal(err.c_str());
-  }
-
-  // type to filter
-  // Ctrl-J/K to move in list
-  // Ctrl-N = toggle { search file names, search contents }
-  // Ctrl-R = toggle { plain substr, regex match }
-  char buf[256];
-  sprintf(buf,
-          "Loaded %d files.",
-          database.FileCount());
-  output.Status(buf);
-
-  BlockingInputLoop(&Refresh, reinterpret_cast<void*>(&output));
-
+  Entry entry;
+  entry.Run();
   return 0;
 }
