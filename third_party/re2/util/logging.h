@@ -80,10 +80,13 @@ class LogMessageFatal : public LogMessage {
  public:
   LogMessageFatal(const char* file, int line)
     : LogMessage(file, line) { }
+#pragma warning(push)
+#pragma warning(disable:4722)
   ~LogMessageFatal() {
     Flush();
     abort();
   }
+#pragma warning(pop)
  private:
   DISALLOW_EVIL_CONSTRUCTORS(LogMessageFatal);
 };

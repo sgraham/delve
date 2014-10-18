@@ -94,6 +94,12 @@ int FullWindowOutput::VisibleOutputLines() const {
 void FullWindowOutput::DisplayResults(const vector<string>& results) {
   if (results.size() > VisibleOutputLines())
     Fatal("too many results supplied");
+  int i = 0;
+  for (; i < static_cast<int>(results.size()); ++i) {
+    FillLine(i, "", results[i], false);
+  }
+  for (; i < VisibleOutputLines(); ++i)
+    FillLine(i, "", "", false);
 }
 
 void FullWindowOutput::CaptureOriginalContentsAndClear() {
@@ -156,5 +162,17 @@ void FullWindowOutput::RestoreOriginalContents() {
                           zero_zero,
                           &csbi.srWindow)) {
     Win32Fatal("WriteConsoleOutput");
+  }
+
+  COORD window_left_top = {csbi.srWindow.Left, csbi.srWindow.Top};
+  DWORD written;
+  // TODO(scottmg): Should capture this too.
+  if (!FillConsoleOutputAttribute(
+           console_,
+           FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,
+           width_ * height_,
+           window_left_top,
+           &written)) {
+    Win32Fatal("FillConsoleOutputAttribute");
   }
 }
