@@ -123,8 +123,6 @@ int main() {
   FullWindowOutput output;
   RealFileReader file_reader;
   FileListDatabase database(&file_reader);
-  //output.Mode1("file names (Ctrl-N)");
-  //output.Mode2("substring (Ctrl-R)");
   output.Status("Loading database...");
 
   string err;

@@ -1,0 +1,4 @@
+https://chromium.googlesource.com/chromium/src/+/master/third_party/re2/
+at 4062b3b073d5b7250f8f307a61464b2b8752c039.
+
+Minor patches to remove dependency on Chromium build/ and avoid warnings.

@@ -1,3 +1,26 @@
+# Rules using variables set in <buildtype>.ninja.
+rule cxx
+  command = $cxx /showIncludes $cflags /c $in /Fo$out
+  description = CXX $out
+  deps = msvc
+
+rule cxx_re2
+  command = $cxx /showIncludes $cflags $
+            /wd4996 /wd4267 /wd4201 /wd4127 /wd4244 /wd4100 /wd4702 /wd4018 $
+            /wd4389 $
+            /c $in /Fo$out
+  description = CXX $out
+  deps = msvc
+
+rule ar
+  command = lib /nologo $arflags /out:$out $in
+  description = LIB $out
+
+rule link
+  command = $cxx $in $libs /nologo /link $ldflags /out:$out
+  description = LINK $out
+
+
 # Core source files all build into library.
 build $builddir\change_journal.obj: cxx src\change_journal.cc
 build $builddir\file_extra_util.obj: cxx src\file_extra_util.cc
@@ -12,6 +35,61 @@ build $builddir\delve.lib: ar $
     $builddir\memory_mapped_file.obj $
     $builddir\path_database.obj $
     $builddir\util.obj $
+
+# re2 lib.
+build $builddir\util\arena.obj: cxx_re2 third_party\re2\util\arena.cc
+build $builddir\util\hash.obj: cxx_re2 third_party\re2\util\hash.cc
+build $builddir\util\rune.obj: cxx_re2 third_party\re2\util\rune.cc
+build $builddir\util\stringpiece.obj: cxx_re2 third_party\re2\util\stringpiece.cc
+build $builddir\util\stringprintf.obj: cxx_re2 third_party\re2\util\stringprintf.cc
+build $builddir\util\strutil.obj: cxx_re2 third_party\re2\util\strutil.cc
+build $builddir\util\valgrind.obj: cxx_re2 third_party\re2\util\valgrind.cc
+build $builddir\re2\bitstate.obj: cxx_re2 third_party\re2\re2\bitstate.cc
+build $builddir\re2\compile.obj: cxx_re2 third_party\re2\re2\compile.cc
+build $builddir\re2\dfa.obj: cxx_re2 third_party\re2\re2\dfa.cc
+build $builddir\re2\filtered_re2.obj: cxx_re2 third_party\re2\re2\filtered_re2.cc
+build $builddir\re2\mimics_pcre.obj: cxx_re2 third_party\re2\re2\mimics_pcre.cc
+build $builddir\re2\nfa.obj: cxx_re2 third_party\re2\re2\nfa.cc
+build $builddir\re2\onepass.obj: cxx_re2 third_party\re2\re2\onepass.cc
+build $builddir\re2\parse.obj: cxx_re2 third_party\re2\re2\parse.cc
+build $builddir\re2\perl_groups.obj: cxx_re2 third_party\re2\re2\perl_groups.cc
+build $builddir\re2\prefilter.obj: cxx_re2 third_party\re2\re2\prefilter.cc
+build $builddir\re2\prefilter_tree.obj: cxx_re2 third_party\re2\re2\prefilter_tree.cc
+build $builddir\re2\prog.obj: cxx_re2 third_party\re2\re2\prog.cc
+build $builddir\re2\re2.obj: cxx_re2 third_party\re2\re2\re2.cc
+build $builddir\re2\regexp.obj: cxx_re2 third_party\re2\re2\regexp.cc
+build $builddir\re2\set.obj: cxx_re2 third_party\re2\re2\set.cc
+build $builddir\re2\simplify.obj: cxx_re2 third_party\re2\re2\simplify.cc
+build $builddir\re2\tostring.obj: cxx_re2 third_party\re2\re2\tostring.cc
+build $builddir\re2\unicode_casefold.obj: cxx_re2 third_party\re2\re2\unicode_casefold.cc
+build $builddir\re2\unicode_groups.obj: cxx_re2 third_party\re2\re2\unicode_groups.cc
+build $builddir\re2.lib: ar $
+    $builddir\util\arena.obj $
+    $builddir\util\hash.obj $
+    $builddir\util\rune.obj $
+    $builddir\util\stringpiece.obj $
+    $builddir\util\stringprintf.obj $
+    $builddir\util\strutil.obj $
+    $builddir\util\valgrind.obj $
+    $builddir\re2\bitstate.obj $
+    $builddir\re2\compile.obj $
+    $builddir\re2\dfa.obj $
+    $builddir\re2\filtered_re2.obj $
+    $builddir\re2\mimics_pcre.obj $
+    $builddir\re2\nfa.obj $
+    $builddir\re2\onepass.obj $
+    $builddir\re2\parse.obj $
+    $builddir\re2\perl_groups.obj $
+    $builddir\re2\prefilter.obj $
+    $builddir\re2\prefilter_tree.obj $
+    $builddir\re2\prog.obj $
+    $builddir\re2\re2.obj $
+    $builddir\re2\regexp.obj $
+    $builddir\re2\set.obj $
+    $builddir\re2\simplify.obj $
+    $builddir\re2\tostring.obj $
+    $builddir\re2\unicode_casefold.obj $
+    $builddir\re2\unicode_groups.obj $
     
 # Main binary.
 build $builddir\delve.obj: cxx src\delve.cc
@@ -20,8 +98,8 @@ build delve: phony $builddir\delve.exe
 build $builddir\delve.exe: link $
     $builddir\delve.obj $
     $builddir\full_window_output.obj $
-    | $builddir\delve.lib
-  libs = delve.lib
+    | $builddir\delve.lib $builddir\re2.lib
+  libs = delve.lib re2.lib
 
 # Tests all build into delve_test executable.
 build $builddir\change_journal_test.obj: cxx src\change_journal_test.cc
@@ -40,7 +118,8 @@ build $builddir\delve_test.exe: link $
     $builddir\path_database_test.obj $
     $builddir\test.obj $
     $builddir\util_test.obj $
-    | $builddir\delve.lib
-  libs = delve.lib
+    | $builddir\delve.lib $builddir\re2.lib
+  libs = delve.lib re2.lib
+
 
 build all: phony $builddir\delve.exe $builddir\delve_test.exe
