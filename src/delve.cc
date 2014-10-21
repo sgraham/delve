@@ -28,6 +28,12 @@ struct FileListDatabase {
   DISALLOW_COPY_AND_ASSIGN(FileListDatabase);
 };
 
+bool EndsWith(const string& a, const string& b) {
+  if (b.size() > a.size())
+    return false;
+  return std::equal(a.begin() + a.size() - b.size(), a.end(), b.begin());
+}
+
 bool FileListDatabase::Load(const string& filename, string* err) {
   string contents;
   string read_err;
@@ -40,6 +46,13 @@ bool FileListDatabase::Load(const string& filename, string* err) {
   string cur;
   for (string::const_iterator i(contents.begin()); i != contents.end(); ++i) {
     if (*i == '\n') {
+      // TODO: Load and use .gitignore, etc.
+      if (EndsWith(cur, "\\tags") || EndsWith(cur, "\\test.txt") ||
+          EndsWith(cur, ".exe") || EndsWith(cur, ".obj") ||
+          cur.find("\\.git\\") != string::npos) {
+        cur.clear();
+        continue;
+      }
       files_.push_back(cur);
       cur.clear();
     } else
@@ -169,11 +182,10 @@ class Entry {
   }
 
   bool Refresh(const string& filter, Action action) {
+    string err;
     vector<SearchResult> results =
-        BruteForceFiles(filter, output_.VisibleOutputLines());
-    if (action == ACTION_NONE)
-      highlight_location_ = -1;
-    else if (action == ACTION_MOVE_HIGHLIGHT_UP)
+        BruteForceFiles(filter, output_.VisibleOutputLines(), &err);
+    if (action == ACTION_MOVE_HIGHLIGHT_UP)
       highlight_location_ = std::max(0, highlight_location_ - 1);
     else if (action == ACTION_MOVE_HIGHLIGHT_DOWN) {
       highlight_location_ = std::min(static_cast<int>(results.size() - 1),
@@ -201,10 +213,13 @@ class Entry {
       present.push_back(buf);
       ++i;
     }
-    output_.DisplayResults(present);
-    if (present.empty())
-      output_.Status("Nothing matches.");
-    else
+    output_.DisplayResults(present, highlight_location_);
+    if (present.empty()) {
+      if (!err.empty())
+        output_.Status("Error: " + err);
+      else
+        output_.Status("Nothing matches.");
+    } else
       output_.Status("");
     output_.DisplayCurrentFilter(filter);
 
@@ -212,9 +227,15 @@ class Entry {
   }
 
  private:
-  vector<SearchResult> BruteForceFiles(const string& filter, int limit) {
+  vector<SearchResult> BruteForceFiles(const string& filter,
+                                       int limit,
+                                       string* err) {
     vector<SearchResult> ret;
-    RE2 pattern(filter);
+    RE2 pattern(filter, RE2::Quiet);
+    if (!pattern.ok()) {
+      *err = pattern.error();
+      return vector<SearchResult>();
+    }
     for (const auto& file : database_.Files()) {
       int line = 1;
       string contents;

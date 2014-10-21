@@ -14,7 +14,7 @@ struct FullWindowOutput {
   void Status(const string& status);
   void DisplayCurrentFilter(const string& status);
   int VisibleOutputLines() const;
-  void DisplayResults(const vector<string>& results);
+  void DisplayResults(const vector<string>& results, int highlight);
 
  private:
   void CaptureOriginalContentsAndClear();

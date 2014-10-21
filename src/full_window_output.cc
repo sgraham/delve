@@ -91,12 +91,13 @@ int FullWindowOutput::VisibleOutputLines() const {
   return height_ - 2;
 }
 
-void FullWindowOutput::DisplayResults(const vector<string>& results) {
+void FullWindowOutput::DisplayResults(const vector<string>& results,
+                                      int highlight) {
   if (results.size() > VisibleOutputLines())
     Fatal("too many results supplied");
   int i = 0;
   for (; i < static_cast<int>(results.size()); ++i) {
-    FillLine(i, "", results[i], false);
+    FillLine(i, "", results[i], i == highlight);
   }
   for (; i < VisibleOutputLines(); ++i)
     FillLine(i, "", "", false);
